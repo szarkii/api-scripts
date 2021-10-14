@@ -1,4 +1,4 @@
-export function Test() {
+function Test() {
   console.log("Test");
   return "Test";
 }
