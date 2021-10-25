@@ -5,10 +5,10 @@
 ### Import modules
 
 ```
-(function() {
-'use strict';
+(async function() {
+    'use strict';
 
-    function loadScript(url, callback) {
+    async function loadScript(url, callback) {
         var head = document.head;
         var script = document.createElement('script');
         script.type = 'text/javascript';
@@ -20,10 +20,13 @@
         head.appendChild(script);
     }
 
-    const run = () => {
-        Utils.wait(100);
+    const run = async () => {
+        await Utils.sleep(100);
+        console.debug("end");
+
     }
 
-    loadScript("https://cdn.jsdelivr.net/gh/rkowalik/api-scripts/js/automated-tests/<FILE>.js", run);
+    let Utils;
+    await loadScript("https://cdn.jsdelivr.net/gh/rkowalik/api-scripts/js/automated-tests/utils.js", run);
 })();
 ```
