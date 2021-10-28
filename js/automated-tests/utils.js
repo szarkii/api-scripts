@@ -1,12 +1,12 @@
 const Utils = {
         click: async function (selector) {
-            await Function.waitUntilElementClickable(selector);
+            await this.waitUntilElementClickable(selector);
             document.querySelector(selector).click();
         },
 
         setInputValue: async function (selector, value) {
-            const element = await Function.getElement(selector);
-            Function.scrollTo(element);
+            const element = await this.getElement(selector);
+            this.scrollTo(element);
 
             element.value = value;
             element.dispatchEvent(new Event('input'));
@@ -14,18 +14,18 @@ const Utils = {
         },
 
         selectOption: async function (selector, optionName) {
-            await Function.waitUntil(() => document.querySelectorAll(`${selector} option`).length > 1);
+            await this.waitUntil(() => document.querySelectorAll(`${selector} option`).length > 1);
             const options = Array.from(document.querySelectorAll(`${selector} option`));
             const value = options.find((option) => option.innerText.trim() === optionName || option.label.trim() === optionName).value;
-            const element = await Function.getElement(selector);
-            Function.scrollTo(element);
+            const element = await this.getElement(selector);
+            this.scrollTo(element);
 
             element.value = value;
             element.dispatchEvent(new Event('change'));
         },
 
         getElement: async function (selector) {
-            if (await Function.waitUntil(() => document.querySelector(selector))) {
+            if (await this.waitUntil(() => document.querySelector(selector))) {
                 return document.querySelector(selector);
             }
 
@@ -33,7 +33,7 @@ const Utils = {
         },
 
         getElements: async function (selector) {
-            if (await Function.waitUntil(() => document.querySelectorAll(selector).length)) {
+            if (await this.waitUntil(() => document.querySelectorAll(selector).length)) {
                 return Array.from(document.querySelectorAll(selector));
             }
 
@@ -41,10 +41,10 @@ const Utils = {
         },
 
         waitUntilElementClickable: async function (selector) {
-            const clickable = await Function.waitUntil(() => {
+            const clickable = await this.waitUntil(() => {
                 const element = document.querySelector(selector);
                 if (element) {
-                    Function.scrollTo(element);
+                    this.scrollTo(element);
                     return (element.getAttribute('disabled') && element.getAttribute('disabled') !== "true")
                         || !element.disabled;
                 }
@@ -56,7 +56,7 @@ const Utils = {
         },
 
         waitUntilClassAdded: async function(selector, className) {
-            const added = await Function.waitUntil(() => {
+            const added = await this.waitUntil(() => {
                 const element = document.querySelector(selector);
                 return element && element.className.includes(className);
             });
@@ -66,7 +66,7 @@ const Utils = {
         },
 
         waitUntilClassRemoved: async function(selector, className) {
-            const removed = await Function.waitUntil(() => {
+            const removed = await this.waitUntil(() => {
                 const element = document.querySelector(selector);
                 return element && !element.className.includes(className);
             });
@@ -85,7 +85,7 @@ const Utils = {
                         resolve(true);
                     });
                 }
-                await Function.sleep(500);
+                await this.sleep(500);
                 msSpent += 500;
             }
 
