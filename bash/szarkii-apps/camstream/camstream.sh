@@ -1,9 +1,9 @@
 #!/bin/bash
 
-VERSION="0.1.0"
+VERSION="0.2.0"
 WIDTH=1024
 HEIGHT=768
-PORT=8080
+PORT=11002
 
 if [[ "$1" = "-h" || "$1" = "--help" ]]; then
     echo "$0 [-w width] [-h height] [-p port]"

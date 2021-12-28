@@ -15,7 +15,8 @@ chmod +x /usr/local/bin/szarkii-apps
 
 ## szarkii-camstream
 
-Simple stream Raspberry Pi camera over HTTP.
+Simple stream Raspberry Pi camera. `szarkii-camstream` command will start streaming with 1024x768 resolution over HTTP on 11002 port.
+You can use VLC to open network stream (e.g. http://192.168.0.1:110002).
 
 ```
 szarkii-apps -i szarkii-camstream

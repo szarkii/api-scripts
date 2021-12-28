@@ -7,31 +7,62 @@ APPS_URL="$REPOSITORY_URL/apps"
 
 APPS=$(curl -s $APPS_URL)
 
-function assertScriptNameProvided() {
+function updateApps() {
+    for appDetails in "$APPS"; do
+        app=$(echo "$appDetails" | cut -d ':' -f1)
+        currentVersion=$($app -v)
+        latestVersion=$(echo "$appDetails" | cut -d ':' -f3)
+
+        if [[ $(which $app) != "" && $currentVersion != $latestVersion ]]; then
+            echo "$app $currentVersion requires update to $latestVersion version."
+            installApp "$app"
+        else
+            echo "$app $currentVersion has the latest version."
+        fi
+    done
+}
+
+function installApp() {
+    appName="$1"
+    assertAppNameProvided "$appName"
+    
+    appPath="$BIN_DIR/$appName"
+    getAppScript "$appName" > "$appPath" || exit
+    chmod +x "$appPath" || exit
+
+    echo "$appName $(getLatestAppVersion) app installed."
+}
+
+function assertAppNameProvided() {
     if [[ "$1" = "" ]]; then
-        echo "You have to provide a script name. Available scripts:"
-        echo "$APPS" | cut -d ":" -f1 | sed 's/\(.*\)/ \* \1/'
+        echo "You have to provide an app name."
+        printAvailableApps
         exit
     fi
 }
 
-function getScript() {
-    scriptName="$1"
-    relativePath=$(echo "$APPS" | grep "$scriptName" | cut -d ":" -f2)
+function printAvailableApps() {
+    echo "Available apps:"
+    echo "$APPS" | cut -d ':' -f1 | sed 's/\(.*\)/ \* \1/'
+}
+
+function getAppScript() {
+    appName="$1"
+    relativePath=$(echo "$APPS" | grep "$appName" | cut -d ':' -f2)
     curl -s "$REPOSITORY_URL/$relativePath"
 }
 
-if [[ "$1" = "-v" || "$1" = "--version" ]]; then
-    echo "$VERSION"
-elif [[ "$1" = "-i" || "$1" = "--install" ]]; then
-    scriptName="$2"
-    assertScriptNameProvided "$scriptName"
-    
-    scriptPath="$BIN_DIR/$scriptName"
-    getScript "$scriptName" > "$scriptPath" || exit
-    chmod +x "$scriptPath" || exit
+function getLatestAppVersion() {
+    appName="$1"
+    echo "$APPS" | grep "$appName" | cut -d ':' -f3
+}
 
-    echo "$scriptName app installed."
+
+if [[ "$1" = "-a" || "$1" = "--apps" ]]; then
+    printAvailableApps
+    exit
+elif [[ "$1" = "-i" || "$1" = "--install" ]]; then
+    installApp "$2"
 elif [[ "$1" = "-u" || "$1" = "--update" ]]; then
-    assertScriptNameProvided "$2"
+    updateApps
 fi
