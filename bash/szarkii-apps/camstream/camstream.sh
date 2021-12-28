@@ -1,11 +1,11 @@
 #!/bin/bash
 
-VERSION="0.2.1"
+VERSION="0.2.2"
 WIDTH=1024
 HEIGHT=768
 PORT=11002
 
-if [[ "$1" = "-h" || "$1" = "--help" ]]; then
+if [[ "$#" -eq 1 && ("$1" = "-h" || "$1" = "--help") ]]; then
     echo "$(basename $0) [-w width] [-h height] [-p port] [-v | --version]"
     echo "  -w  width ($WIDTH by default)"
     echo "  -h  height ($HEIGHT by default)"
