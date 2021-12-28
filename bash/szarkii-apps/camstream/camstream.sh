@@ -1,15 +1,16 @@
 #!/bin/bash
 
-VERSION="0.2.0"
+VERSION="0.2.1"
 WIDTH=1024
 HEIGHT=768
 PORT=11002
 
 if [[ "$1" = "-h" || "$1" = "--help" ]]; then
-    echo "$0 [-w width] [-h height] [-p port]"
+    echo "$(basename $0) [-w width] [-h height] [-p port] [-v | --version]"
     echo "  -w  width ($WIDTH by default)"
-    echo "  -h  height  ($HEIGHT by default)"
-    echo "  -p  port  ($PORT by default)"
+    echo "  -h  height ($HEIGHT by default)"
+    echo "  -p  port ($PORT by default)"
+    echo "  -v  version"
     exit
 fi
 
