@@ -21,3 +21,21 @@ You can use VLC to open network stream (e.g. http://192.168.0.1:110002).
 ```
 szarkii-apps -i szarkii-camstream
 ```
+
+## szarkii-rec
+
+Record videos using Raspberry Pi camera.
+
+```
+szarkii-apps -i szarkii-rec
+```
+
+## szarkii-merge-vid
+
+Merge multiple videos into one file.
+
+Dependencies: ffmpeg.
+
+```
+szarkii-apps -i szarkii-merge-vid
+```

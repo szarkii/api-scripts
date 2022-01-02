@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.1"
+VERSION="0.2.1"
 BIN_DIR="/usr/local/bin"
 REPOSITORY_URL="https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/szarkii-apps"
 APPS_URL="$REPOSITORY_URL/apps"
@@ -8,10 +8,11 @@ APPS_URL="$REPOSITORY_URL/apps"
 mapfile -t APPS < <( curl -s "$APPS_URL" )
 
 function printHelp() {
-    echo "$(basename $0) [-a | --apps] [-i | --install name] [-u | --update]"
+    echo "$(basename $0) [-a | --apps] [-i | --install name] [-u | --update]  [-r | --remove name]"
     echo "  -a --apps  print all apps"
     echo "  -i --install  install app"
     echo "  -u --update update all apps"
+    echo "  -r --remove app"
     exit
 }
 
@@ -99,6 +100,21 @@ function getAppDetails() {
     done
 }
 
+function removeApp() {
+    appName="$1"
+    assertAppNameProvided "$appName"
+    if [[ -z $(which $appName) ]]; then
+        echo "$appName is not installed."
+    fi
+
+    rm "$BIN_DIR/$appName" || exit
+    if [[ -z $(which $appName) ]]; then
+        echo "$appName has been removed."
+    else
+        echo "Removing the application failed. Do you have enough privileges?"
+    fi
+}
+
 if [[ "$#" -eq 1 && ("$1" = "-h" || "$1" = "--help") ]]; then
     printHelp
     exit
@@ -114,4 +130,6 @@ elif [[ "$1" = "-i" || "$1" = "--install" ]]; then
     installApp "$2"
 elif [[ "$1" = "-u" || "$1" = "--update" ]]; then
     updateApps
+elif [[ "$1" = "-r" || "$1" = "--remove" ]]; then
+    removeApp "$2"
 fi
