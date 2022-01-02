@@ -37,7 +37,7 @@ if [[ $# -lt $(($FIRST_FILE_INDEX + 1)) ]]; then
 fi
 
 for file in "${@: FIRST_FILE_INDEX}"; do
-    echo "file $file" >> "$FILES_DIR/$TMP_LIST_PATH"
+    echo "file $FILES_DIR/$file" >> "$TMP_LIST_PATH"
 done
 
 # -safe 0 for "Unsafe file name" error

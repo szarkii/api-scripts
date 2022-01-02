@@ -7,7 +7,7 @@
 Download manager script and place it in the directory belonging to `$PATH`. Please note that user should have appropriate privilages to access this dictionary (you can do it as a root).
 
 ```
-curl https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/szarkii-apps/manager.sh > /usr/local/bin/szarkii-apps
+curl https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/szarkii-apps/apps-manager.sh > /usr/local/bin/szarkii-apps
 chmod +x /usr/local/bin/szarkii-apps
 ```
 
