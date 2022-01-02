@@ -1,2 +1,3 @@
 szarkii-camstream:camstream/camstream.sh:0.2.2
 szarkii-rec:rec/rec.sh:0.1.0
+szarkii-merge-vid:merge-vid/merge-vid.sh:0.1.0
