@@ -11,7 +11,36 @@ curl https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/sz
 chmod +x /usr/local/bin/szarkii-apps
 ```
 
+Now the manager can be used to install or update the applications, i.e.:
+
+```
+szarkii-apps -i szarkii-img-diff
+```
+
 # Applications
+
+## img-diff
+
+The script checks how similar the images are and retruns the number. The greater value means more similarity. If images are identical the "inf" value is returned.
+
+Dependencies: magick (https://imagemagick.org/script/download.php)
+
+```
+szarkii-apps -i szarkii-img-diff
+```
+
+## vid-diff
+
+Checks that the video shows static content that does not change over the course of the video.
+The script creates a snapshot of a frame every second. Depending on the detected differences, all snapshot will be moved to the diffrent dictionaries.
+
+Increasing the similarity threshold and the number of frames to be checked increases the accuracy and time of script execution.
+
+Dependencies: szarkii-img-diff
+
+```
+szarkii-apps -i szarkii-vid-diff
+```
 
 ## szarkii-camstream
 

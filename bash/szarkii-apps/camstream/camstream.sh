@@ -4,6 +4,7 @@ VERSION="0.4.0"
 WIDTH=1024
 HEIGHT=768
 PORT=11002
+
 RASPBIAN_OS_CODE=$(cat /etc/os-release | grep 'VERSION_CODENAME' | tr -d 'VERSION_CODENAME=')
 
 if [[ "$#" -eq 1 && ("$1" = "-h" || "$1" = "--help") ]]; then
