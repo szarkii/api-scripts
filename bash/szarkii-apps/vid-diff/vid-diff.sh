@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 FRAMES_TO_CHECK_NUMBER=5
 SIMILARITY_THRESHOLD=20
 
@@ -89,6 +89,7 @@ while getopts s:n: option; do
 done
 
 input="${@: -1}"
+input=$(realpath "$input")
 
 [[ -z "$input" ]] && showError "Input is required."
 [[ "$FRAMES_TO_CHECK_NUMBER" -lt 2 ]] && showError "The number of frames must be at least 2."

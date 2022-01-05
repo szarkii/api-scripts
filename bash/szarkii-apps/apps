@@ -2,5 +2,5 @@ szarkii-apps:apps-manager.sh:0.2.1
 szarkii-camstream:camstream/camstream.sh:0.4.0
 szarkii-rec:rec/rec.sh:0.1.1
 szarkii-merge-vid:merge-vid/merge-vid.sh:0.1.1
-szarkii-vid-diff:vid-diff/vid-diff.sh:0.1.0
+szarkii-vid-diff:vid-diff/vid-diff.sh:0.1.1
 szarkii-img-diff:img-diff/img-diff.sh:0.1.0
