@@ -4,7 +4,7 @@
 
 # Manager installation
 
-Download manager script and place it in the directory belonging to `$PATH`. Please note that user should have appropriate privilages to access this dictionary (you can do it as a root).
+Download manager script and place it in the directory belonging to `$PATH`. Please note that user should have appropriate privilages to access this dictionary (you can do it as a root - `sudo su`).
 
 ```
 curl https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/szarkii-apps/apps-manager.sh > /usr/local/bin/szarkii-apps
@@ -14,32 +14,45 @@ chmod +x /usr/local/bin/szarkii-apps
 Now the manager can be used to install or update the applications, i.e.:
 
 ```
+# Install application
 szarkii-apps -i szarkii-img-diff
+# Updated all installed applications 
+szarkii-apps -u
 ```
 
 # Applications
 
-## img-diff
+## szarkii-img-diff
 
 The script checks how similar the images are and retruns the number. The greater value means more similarity. If images are identical the "inf" value is returned.
 
-Dependencies: magick (https://imagemagick.org/script/download.php)
+**Dependencies**: magick (https://imagemagick.org/script/download.php)
 
 ```
 szarkii-apps -i szarkii-img-diff
 ```
 
-## vid-diff
+## szarkii-vid-diff
 
 Checks that the video shows static content that does not change over the course of the video.
 The script creates a snapshot of a frame every second. Depending on the detected differences, all snapshot will be moved to the diffrent dictionaries.
 
 Increasing the similarity threshold and the number of frames to be checked increases the accuracy and time of script execution.
 
-Dependencies: szarkii-img-diff
+**Dependencies**: szarkii-img-diff
 
 ```
 szarkii-apps -i szarkii-vid-diff
+```
+
+## szarkii-vid-convert
+
+Convert video into another format. Dedicated for converting all files in the given directory.
+
+**Dependencies**: ffmpeg
+
+```
+szarkii-apps -i szarkii-vid-convert
 ```
 
 ## szarkii-camstream
@@ -63,7 +76,7 @@ szarkii-apps -i szarkii-rec
 
 Merge multiple videos into one file.
 
-Dependencies: ffmpeg.
+**Dependencies**: ffmpeg.
 
 ```
 szarkii-apps -i szarkii-merge-vid
