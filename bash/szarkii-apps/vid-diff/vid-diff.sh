@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.1"
+VERSION="0.1.2"
 FRAMES_TO_CHECK_NUMBER=5
 SIMILARITY_THRESHOLD=20
 
@@ -30,7 +30,7 @@ function printHelp() {
 
 function checkDifference() {
     videoPath="$1"
-    videoFileName=$(basename $videoPath)
+    videoFileName=$(basename "$videoPath")
     framesDirName="${videoFileName%.*}"
     framesDirPath="$PROCESSED_VIDEOS_DIR/$framesDirName"
 
