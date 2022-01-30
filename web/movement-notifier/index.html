@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      font-family: Sans-serif;
+    }
+
+    #header {
+      width: 100%;
+      padding: 1rem;
+      margin-bottom: 3rem;
+      color: white;
+      background-color: black;
+      text-align: center;
+    }
+
+    #alert-container {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      margin: auto;
+    }
+
+    #alert-img {
+      width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header">Movement Detector (Szarkii Corporation©)</div>
+  <div id="alert-container">
+    <div>
+      <h3 id="alert-header"></h3>
+      <img id="alert-img">
+    </div>
+
+  </div>
+
+  <script>
+    class AlertComponent {
+      setHeader(header) {
+        document.getElementById("alert-header").innerText = header;
+      }
+
+      setImage(image) {
+        document.getElementById("alert-img").src = image;
+      }
+    }
+
+    function showAlert(image) {
+      const imageName = image.replace(/.*\//, "");
+      const date = imageName.split("_")[0];
+      const time = imageName.split("_")[1].replace(/-/g, ":").replace(/\..*/, "");
+      alertComponent.setHeader(`Wykryto ruch (${date} ${time}):`);
+      alertComponent.setImage(image);
+    }
+
+    const alertComponent = new AlertComponent();
+
+    const source = new EventSource('/events');
+    source.onmessage = function (e) {
+      showAlert(e.data);
+    };
+  </script>
+</body>
+
+</html>
