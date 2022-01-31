@@ -67,6 +67,12 @@ http.createServer(async function (request, response) {
     const snapshotName = request.url.replace("/snapshots/", "");
     const snapshotPath = snapshotService.getSnapshotPathFromName(snapshotName);
 
+    if (!fs.existsSync(snapshotPath)) {
+      response.writeHead(404);
+      response.end();
+      return;
+    }
+
     response.writeHead(200, { "content-type": "image/jpg" });
     response.write(fs.readFileSync(snapshotPath));
     response.end();
