@@ -22,6 +22,31 @@ szarkii-apps -u
 
 # Applications
 
+## szarkii-csv-jobs
+
+Helps with processing multiple files - executes commands from CSV file. Creates a CSV file and appends all files paths from the current directory. You can define bash command in the first column. You can use other columns as arguments (by its numbers).
+
+The `szarkii-csv-jobs --create` command, exectued in `/files/music` will create `music.csv` file containing:
+
+| command | file             |
+| ------- | ---------------- |
+|         | /files/file1.mp3 |
+|         | /files/file2.mp3 |
+
+You can define command freely. This CSV file:
+
+| command                         | file             | track |
+| ------------------------------- | ---------------- | ----- |
+| szarkii-music-metadata -t $3 $2 | /files/file1.mp3 | 1     |
+| szarkii-music-metadata -t $3 $2 | /files/file2.mp3 | 2     |
+
+will produce and execute the following commands:
+
+```
+szarkii-music-metadata -t "1" "/files/file1.mp3"
+szarkii-music-metadata -t "2" "/files/file2.mp3"
+```
+
 ## szarkii-music-metadata
 
 Sets metadata to music files. Downloads the file if URL provided.
