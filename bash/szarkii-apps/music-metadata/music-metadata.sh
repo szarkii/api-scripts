@@ -1,13 +1,14 @@
 #!/bin/bash
 
-VERSION="0.2.0"
+VERSION="1.0.0"
 IFS=$'\n'
 
 function printHelp() {
     echo "Sets metadata for music files. Downloads the file if URL is provided."
-    echo "Dependencies: kid3-cli"
+    echo "Dependencies: kid3-cli, youtube-dl"
     echo "$(basename $0) [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] [-u URL] input"
-    echo "  input  file or directory (N/A for -u)"
+    echo "  input  file or directory"
+    echo "         must be directory if -u provided"
     exit
 }
 
@@ -19,15 +20,20 @@ elif [[ "$1" = "-v" || "$1" = "--version" ]]; then
     exit
 fi
 
-if [[ "$#" -lt 3 ]]; then
+if [[ "$#" -lt 2 ]]; then
     echo "Invalid arguments."
     echo
     printHelp
 fi
 
-# TODO
 function downloadFile() {
-    youtube-dl --prefer-ffmpeg --format "bestaudio/best" --extract-audio --audio-quality 0 --audio-format mp3 --output "$DIR/$name.%(ext)s" "$url"
+    filePath="$1"
+    url="$2"
+    youtube-dl --prefer-ffmpeg --format "bestaudio/best" --extract-audio --audio-quality 0 --audio-format mp3 --output "$filePath" "$url"
+}
+
+function getWebsiteTitle {
+    curl -s "$1" | grep -o "<title>[^<]*" | tail -c+8
 }
 
 function setMetadata() {
@@ -96,6 +102,20 @@ done
 
 input="${@: -1}"
 input="$(realpath "$input")"
+
+if [[ ! -z "$url" ]]; then
+    if [[ ! -d "$input" ]]; then
+        "Input must be directory if URL provided."
+        printHelp
+        exit
+    fi
+
+    name=$(getWebsiteTitle "$url")
+    name=${name// - YouTube/}
+    input="$input/$name.mp3"
+    
+    downloadFile "$input" "$url"
+fi
 
 if [[ -d "$input" ]]; then
     for fileName in $(ls "$input"); do

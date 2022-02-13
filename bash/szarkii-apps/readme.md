@@ -51,7 +51,7 @@ szarkii-music-metadata -t "2" "/files/file2.mp3"
 
 Sets metadata to music files. Downloads the file if URL provided.
 
-**Dependencies**: kid3-cli
+**Dependencies**: kid3-cli, youtube-dl
 
 ## szarkii-img-diff
 
