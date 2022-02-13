@@ -1,14 +1,13 @@
 #!/bin/bash
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 IFS=$'\n'
 
 function printHelp() {
-    echo "Sets metadata for music files. Downloads the file if URL is provided."
+    echo "Sets metadata for music files. Downloads the file if input is URL."
     echo "Dependencies: kid3-cli, youtube-dl"
-    echo "$(basename $0) [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] [-u URL] input"
-    echo "  input  file or directory"
-    echo "         must be directory if -u provided"
+    echo "$(basename $0) [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] input"
+    echo "  input  file, directory or URL"
     exit
 }
 
@@ -101,21 +100,17 @@ while getopts t:n:a:l:y:g:u:d: option; do
 done
 
 input="${@: -1}"
-input="$(realpath "$input")"
 
-if [[ ! -z "$url" ]]; then
-    if [[ ! -d "$input" ]]; then
-        "Input must be directory if URL provided."
-        printHelp
-        exit
-    fi
-
-    name=$(getWebsiteTitle "$url")
-    name=${name// - YouTube/}
-    input="$input/$name.mp3"
+if [[ "$input" = "http"* ]]; then
+    name=$(getWebsiteTitle "$input")
+    name="${name// - YouTube/}.mp3"
     
-    downloadFile "$input" "$url"
+    downloadFile "$name" "$input"
+    
+    input="./$name"
 fi
+
+input="$(realpath "$input")"
 
 if [[ -d "$input" ]]; then
     for fileName in $(ls "$input"); do
