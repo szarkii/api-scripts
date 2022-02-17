@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 IFS=$'\n'
 
 function printHelp() {
@@ -8,6 +8,7 @@ function printHelp() {
     echo "Dependencies: kid3-cli, youtube-dl"
     echo "$(basename $0) [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] input"
     echo "  input  file, directory or URL"
+    echo "     -n  will be also the name of file if input is URL (if empty the title will be used)"
     exit
 }
 
@@ -19,16 +20,21 @@ elif [[ "$1" = "-v" || "$1" = "--version" ]]; then
     exit
 fi
 
-if [[ "$#" -lt 2 ]]; then
+if [[ "$#" -lt 1 ]]; then
     echo "Invalid arguments."
     echo
     printHelp
 fi
 
 function downloadFile() {
-    filePath="$1"
+    name="$1"
     url="$2"
-    youtube-dl --prefer-ffmpeg --format "bestaudio/best" --extract-audio --audio-quality 0 --audio-format mp3 --output "$filePath" "$url"
+
+    if [[ -z "$name" ]]; then
+        name="%(title)s.%(ext)s"
+    fi
+
+    youtube-dl -f "bestaudio/best" -ciw -o "$name" -v --extract-audio --audio-quality 0 --audio-format mp3 "$url"
 }
 
 function getWebsiteTitle {
@@ -102,11 +108,17 @@ done
 input="${@: -1}"
 
 if [[ "$input" = "http"* ]]; then
-    name=$(getWebsiteTitle "$input")
-    name="${name// - YouTube/}.mp3"
+    if [[ ! -z "$name" ]]; then
+        name=$(getWebsiteTitle "$input")
+        name="${name// - YouTube/}.mp3"
+    fi
     
     downloadFile "$name" "$input"
     
+    if [[ ! -z "$name" ]]; then
+        name=$(ls -rt | head -n1)
+    fi
+
     input="./$name"
 fi
 
