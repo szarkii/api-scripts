@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.1.1"
+VERSION="1.1.2"
 IFS=$'\n'
 
 function printHelp() {
@@ -51,7 +51,7 @@ function setMetadata() {
     filePath="$7"
     
     setMetadataIfNeeded "track" "$track" "$filePath"
-    setMetadataIfNeeded "title" "$name" "$filePath"
+    setMetadataIfNeeded "title" "${name//\.mp3/}" "$filePath"
     setMetadataIfNeeded "artist" "$artist" "$filePath"
     setMetadataIfNeeded "album" "$album" "$filePath"
     setMetadataIfNeeded "date" "$year" "$filePath"

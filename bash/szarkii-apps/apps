@@ -5,5 +5,5 @@ szarkii-merge-vid:merge-vid/merge-vid.sh:0.1.1
 szarkii-vid-diff:vid-diff/vid-diff.sh:0.1.2
 szarkii-img-diff:img-diff/img-diff.sh:0.1.0
 szarkii-vid-convert:vid-convert/vid-convert.sh:0.1.0
-szarkii-music-metadata:music-metadata/music-metadata.sh:1.1.1
+szarkii-music-metadata:music-metadata/music-metadata.sh:1.1.2
 szarkii-csv-jobs:csv-jobs/csv-jobs.sh:0.1.0
