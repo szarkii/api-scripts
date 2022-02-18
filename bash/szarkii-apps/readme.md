@@ -22,15 +22,42 @@ szarkii-apps -u
 
 # Applications
 
+## szarkii-csv-jobs
+
+Helps with processing multiple files - executes commands from CSV file. Creates a CSV file and appends all files paths from the current directory. You can define bash command in the first column. You can use other columns as arguments (by its numbers).
+
+The `szarkii-csv-jobs --create` command, exectued in `/files/music` will create `music.csv` file containing:
+
+| command | file             |
+| ------- | ---------------- |
+|         | /files/file1.mp3 |
+|         | /files/file2.mp3 |
+
+You can define command freely. This CSV file:
+
+| command                         | file             | track |
+| ------------------------------- | ---------------- | ----- |
+| szarkii-music-metadata -t $3 $2 | /files/file1.mp3 | 1     |
+| szarkii-music-metadata -t $3 $2 | /files/file2.mp3 | 2     |
+
+will produce and execute the following commands:
+
+```
+szarkii-music-metadata -t "1" "/files/file1.mp3"
+szarkii-music-metadata -t "2" "/files/file2.mp3"
+```
+
+## szarkii-music-metadata
+
+Sets metadata to music files. Downloads the file if URL provided.
+
+**Dependencies**: kid3-cli, youtube-dl
+
 ## szarkii-img-diff
 
 The script checks how similar the images are and retruns the number. The greater value means more similarity. If images are identical the "inf" value is returned.
 
 **Dependencies**: magick (https://imagemagick.org/script/download.php)
-
-```
-szarkii-apps -i szarkii-img-diff
-```
 
 ## szarkii-vid-diff
 
@@ -41,43 +68,23 @@ Increasing the similarity threshold and the number of frames to be checked incre
 
 **Dependencies**: szarkii-img-diff
 
-```
-szarkii-apps -i szarkii-vid-diff
-```
-
 ## szarkii-vid-convert
 
 Convert video into another format. Dedicated for converting all files in the given directory.
 
 **Dependencies**: ffmpeg
 
-```
-szarkii-apps -i szarkii-vid-convert
-```
-
 ## szarkii-camstream
 
 Simple stream Raspberry Pi camera. `szarkii-camstream` command will start streaming with 1024x768 resolution over HTTP on 11002 port. App uses `libcamera-vid` or `raspivid` depending on Raspian version.
-You can use VLC to open network stream (e.g. http://192.168.0.1:110002).
-
-```
-szarkii-apps -i szarkii-camstream
-```
+You can use VLC to open network stream (e.g. http://192.168.0.1:110002 (Buster) or tcp/h264://192.168.0.1:110002 (BullsEye)).
 
 ## szarkii-rec
 
 Record videos using Raspberry Pi camera.
 
-```
-szarkii-apps -i szarkii-rec
-```
-
 ## szarkii-merge-vid
 
 Merge multiple videos into one file.
 
-**Dependencies**: ffmpeg.
-
-```
-szarkii-apps -i szarkii-merge-vid
-```
+**Dependencies**: ffmpeg
