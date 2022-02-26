@@ -55,9 +55,9 @@ Sets metadata to music files. Downloads the file if URL provided.
 
 ## szarkii-img-diff
 
-The script checks how similar the images are and retruns the number. The greater value means more similarity. If images are identical the "inf" value is returned.
+The script checks how similar the images are and retruns the percent. The greater value means more similarity.
 
-**Dependencies**: magick (https://imagemagick.org/script/download.php)
+**Dependencies**: convert
 
 ## szarkii-vid-diff
 
