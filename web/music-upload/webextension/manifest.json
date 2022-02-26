@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "Music Upload",
+  "version": "1.0",
+  "description": "Sends request to upload music.",
+  "icons": {
+    "512": "icons/icon-512.png"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "<all_urls>"
+  ],
+  "browser_action": {
+    "default_icon": "icons/icon-512.png",
+    "default_title": "Upload",
+    "default_popup": "popup/popup.html"
+  }
+}
