@@ -1,14 +1,15 @@
 #!/bin/bash
 
-VERSION="1.1.2"
+VERSION="1.2.0"
 IFS=$'\n'
 
 function printHelp() {
     echo "Sets metadata for music files. Downloads the file if input is URL."
     echo "Dependencies: kid3-cli, youtube-dl"
-    echo "$(basename $0) [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] input"
+    echo "$(basename $0) [-o output] [-t track] [-n name] [-a artist] [-l album] [-y year] [-g genre] input"
     echo "  input  file, directory or URL"
     echo "     -n  will be also the name of file if input is URL (if empty the title will be used)"
+    echo "     -o  output directory (if downloading file)"
     exit
 }
 
@@ -28,17 +29,14 @@ fi
 
 function downloadFile() {
     name="$1"
-    url="$2"
+    output="$2"
+    url="$3"
 
-    if [[ -z "$name" ]]; then
-        name="%(title)s.%(ext)s"
-    fi
-
-    youtube-dl -f "bestaudio/best" -ciw -o "$name" -v --extract-audio --audio-quality 0 --audio-format mp3 "$url"
+    youtube-dl -f "bestaudio/best" -ciw -o "$output/$name.%(ext)s" --extract-audio --audio-quality 0 "$url"
 }
 
-function getWebsiteTitle {
-    curl -s "$1" | grep -o "<title>[^<]*" | tail -c+8
+function getFileName {
+    youtube-dl -o "%(title)s" --get-filename "$1"
 }
 
 function setMetadata() {
@@ -86,8 +84,9 @@ function deleteMetadata() {
 
 metadataToDelete=()
 
-while getopts t:n:a:l:y:g:u:d: option; do
+while getopts o:t:n:a:l:y:g:u:d: option; do
     case "${option}" in
+        o) output=${OPTARG} ;;
         t) track=${OPTARG} ;;
         n) name=${OPTARG} ;;
         a) artist=${OPTARG} ;;
@@ -107,21 +106,22 @@ done
 
 input="${@: -1}"
 
+# Download the file
 if [[ "$input" = "http"* ]]; then
-    if [[ ! -z "$name" ]]; then
-        name=$(getWebsiteTitle "$input")
-        name="${name// - YouTube/}.mp3"
-    fi
-    
-    downloadFile "$name" "$input"
-    
-    if [[ ! -z "$name" ]]; then
-        name=$(ls -rt | head -n1)
+    if [[ -z "$name" ]]; then
+        name=$(getFileName "$input")
     fi
 
-    input="./$name"
+    if [[ -z "$output" ]]; then
+        output="."
+    fi
+    
+    downloadFile "$name" "$output" "$input"
+
+    input=$(ls "$output/$name"* | head -n1)
 fi
 
+# Add or delete file's metadata
 input="$(realpath "$input")"
 
 if [[ -d "$input" ]]; then
