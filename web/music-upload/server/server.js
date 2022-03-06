@@ -11,7 +11,8 @@ if (!Fs.existsSync(configFilePath)) {
     port: 8000,
     authorizationToken: "",
     musicDirectory: "",
-    debugMode: true
+    debugMode: true,
+    expirationFinishedTasksMinutes: 60
   };
 
   console.error(`Configuration file does not exist. Go to "${configFilePath}" and update the file.`);
@@ -29,7 +30,7 @@ const Logger = {
   },
 
   error: (message) => {
-      console.error(`[${Logger.getTime()}] ERROR ${message}`);
+    console.error(`[${Logger.getTime()}] ERROR ${message}`);
   },
 
   getTime: () => {
@@ -38,34 +39,110 @@ const Logger = {
   }
 };
 
-async function downloadFile(url, artist, album) {
-  let artistArgument = "";
-  if (artist) {
-    artistArgument = `-a "${artist}"`;
+const UploadStatus = {
+  Uploading: "UPLOADING",
+  Finished: "FINISHED"
+};
+
+class UploadService {
+  constructor() {
+    this.tasks = [];
   }
 
-  let albumArgument = "";
-  if (album) {
-    albumArgument = `-l "${album}"`;
+  getUploadingTasks() {
+    return this.tasks;
   }
 
-  return new Promise((resolve) => {
-    const command = `cd "${Config.musicDirectory}"; szarkii-music-metadata ${artistArgument} ${albumArgument} ${url}`;
+  queueFile(file) {
+    const task = {
+      file,
+      status: UploadStatus.Uploading,
+      timestamp: new Date()
+    };
+
+    this.tasks.push(task);
+
+    if (this.getOngoingTasks().length === 1) {
+      this.downloadFile(task);
+    }
+  }
+
+  downloadFile(task) {
+    Logger.debug(`Starting download ${task.file.name}.`);
+
+    let nameArgument = "";
+    if (task.file.name) {
+      nameArgument = `-n "${task.file.name}"`;
+    }
+
+    let artistArgument = "";
+    if (task.file.artist) {
+      artistArgument = `-a "${task.file.artist}"`;
+    }
+
+    let albumArgument = "";
+    if (task.file.album) {
+      albumArgument = `-l "${task.file.album}"`;
+    }
+
+    const command = `cd "${Config.musicDirectory}"; ` +
+      `szarkii-music-metadata ${nameArgument} ${artistArgument} ${albumArgument} ${task.file.url}`;
     Logger.debug(`Executing command "${command}"`);
 
     exec(command, (error, stdout, stderr) => {
       if (error) {
         Logger.error(error);
-        resolve(false);
       } else {
-        Logger.debug("Command finished.");
-        Logger.debug(stdout);
-        Logger.debug(stderr);
-        resolve(true);
+        this.finishLastTask();
+        this.executeNextTaskIfAny();
+
+        if (stdout) {
+          Logger.debug(stdout);
+        }
+
+        if (stderr) {
+          Logger.error(stderr);
+        }
       }
     });
-  });
+  }
+
+  finishLastTask() {
+    const task = this.getOngoingTasks()[0];
+    Logger.debug("Finished file from " + task.file.name);
+    task.status = UploadStatus.Finished;
+    task.timestamp = new Date();
+  }
+
+  executeNextTaskIfAny() {
+    const ongoingTasks = this.getOngoingTasks();
+    if (ongoingTasks.length) {
+      this.downloadFile(ongoingTasks[0]);
+    }
+  }
+
+  getOngoingTasks() {
+    return this.tasks.filter(task => task.status === UploadStatus.Uploading);
+  }
+
+  deleteExpiredTasks() {
+    const finishedTasks = this.tasks.filter(task => task.status === UploadStatus.Finished);
+    if (!finishedTasks.length) {
+      return;
+    }
+
+    const expirationTime = new Date((new Date()).getTime() - (60 * Config.expirationFinishedTasksMinutes * 1000));
+
+    const tasksToDelete = this.tasks
+      .filter(task => task.status === UploadStatus.Finished
+        && task.timestamp.getTime() < expirationTime)
+      .length;
+
+    this.tasks.splice(0, tasksToDelete);
+  }
 }
+
+const uploadService = new UploadService();
 
 http.createServer(async function (request, response) {
   Logger.debug(request.url);
@@ -76,7 +153,15 @@ http.createServer(async function (request, response) {
     return;
   }
 
-  if (request.url === "/upload") {
+  if (request.method === "GET" && request.url === "/upload/status") {
+    uploadService.deleteExpiredTasks();
+
+    response.writeHead(200);
+    response.write(JSON.stringify(uploadService.getUploadingTasks()));
+    response.end();
+  }
+
+  if (request.method === "POST" && request.url === "/upload") {
     let body = "";
 
     request.on("data", chunk => {
@@ -94,15 +179,11 @@ http.createServer(async function (request, response) {
         return;
       }
 
-      if(await downloadFile(body.url, body.artist, body.album)) {
-        response.writeHead(200);
-        response.write("OK");
-        response.end();
-      } else {
-        response.writeHead(500);
-        response.write("Server error.");
-        response.end();
-      }   
+      uploadService.queueFile(body);
+
+      response.writeHead(200);
+      response.write("OK");
+      response.end();
     });
 
     return;

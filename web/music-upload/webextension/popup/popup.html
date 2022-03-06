@@ -8,11 +8,15 @@
 </head>
 
 <body>
+    <div class="error"></div>
+
+    <div class="info"></div>
+
+    <hr/>
+
     <div class="form">
-        <div>Host server URL:</div>
-        <input id="host" placeholder="URL..." />
-        <div>Authorization token:</div>
-        <input id="token" placeholder="Token..." />
+        <div>Name:</div>
+        <input id="name" placeholder="Name..." />
         <div>Artist:</div>
         <input id="artist" placeholder="Artist..." />
         <div>Album:</div>
@@ -20,6 +24,10 @@
     </div>
 
     <button id="upload-button">Upload</button>
+
+    <div class="queue" 
+        template="<div style='display: block;'>${file.name}, ${status}</div>">
+    </div>
 
     <script src="popup.js"></script>
 </body>
