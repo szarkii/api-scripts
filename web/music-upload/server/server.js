@@ -17,7 +17,7 @@ if (!Fs.existsSync(configFilePath)) {
 
   console.error(`Configuration file does not exist. Go to "${configFilePath}" and update the file.`);
   Fs.writeFileSync(configFilePath, JSON.stringify(defaultConfiguration, null, 2), 'utf8');
-  return;
+  process.exit(1);
 }
 
 const Config = require(configFilePath);
