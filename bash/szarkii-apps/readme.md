@@ -55,9 +55,9 @@ Sets metadata to music files. Downloads the file if URL provided.
 
 ## szarkii-img-diff
 
-The script checks how similar the images are and retruns the number. The greater value means more similarity. If images are identical the "inf" value is returned.
+The script checks how similar the images are and retruns the percent. The greater value means more similarity.
 
-**Dependencies**: magick (https://imagemagick.org/script/download.php)
+**Dependencies**: convert
 
 ## szarkii-vid-diff
 
@@ -77,7 +77,7 @@ Convert video into another format. Dedicated for converting all files in the giv
 ## szarkii-camstream
 
 Simple stream Raspberry Pi camera. `szarkii-camstream` command will start streaming with 1024x768 resolution over HTTP on 11002 port. App uses `libcamera-vid` or `raspivid` depending on Raspian version.
-You can use VLC to open network stream (e.g. http://192.168.0.1:110002 (Buster) or tcp/h264://192.168.0.1:110002 (BullsEye)).
+You can use VLC to open network stream (e.g. http://192.168.0.1:11002 (Buster) or tcp/h264://192.168.0.1:11002 (BullsEye)).
 
 ## szarkii-rec
 

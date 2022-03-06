@@ -1,11 +1,9 @@
 #!/bin/bash
 
-VERSION="0.4.0"
+VERSION="0.5.0"
 WIDTH=1024
 HEIGHT=768
 PORT=11002
-
-RASPBIAN_OS_CODE=$(cat /etc/os-release | grep 'VERSION_CODENAME' | tr -d 'VERSION_CODENAME=')
 
 if [[ "$#" -eq 1 && ("$1" = "-h" || "$1" = "--help") ]]; then
     echo "$(basename $0) [-w width] [-h height] [-p port] [-v | --version]"
@@ -29,7 +27,8 @@ while getopts w:h:p: option; do
     esac
 done
 
-if [[ "$RASPBIAN_OS_CODE" = "bullseye" ]]; then
+libcamera-vid --version
+if [[ "$?" = "0" ]]; then
     libcamera-vid -t 0 --width "$WIDTH" --height "$HEIGHT" --inline --listen -o "tcp://0.0.0.0:$PORT"
 else
     raspivid -o - -t 0 -w "$WIDTH" -h "$HEIGHT" -fps 24 | \

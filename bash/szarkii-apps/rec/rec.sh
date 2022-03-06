@@ -25,9 +25,9 @@ function rec() {
     filename="${time//:/_}"
     filename="${filename/+/-}"
     path="$OUTPUT_DIR/$filename.$EXTENSION"
-    os=$(cat /etc/os-release | grep 'VERSION_CODENAME' | tr -d 'VERSION_CODENAME=')
 
-    if [[ "$os" = 'bullseye' ]]; then
+    libcamera-vid --version
+    if [[ "$?" = "0" ]]; then
         libcamera-vid -o "$path" -t "$milliseconds" --width "$WIDTH" --height "$HEIGHT"
     else
         raspivid -o "$path" -t "$milliseconds" --width "$WIDTH" --height "$HEIGHT"
