@@ -1,13 +1,12 @@
 #!/bin/bash
 
-VERSION="0.1.0"
+VERSION="1.0.0"
 
 function printHelp() {
     echo "Convert video into another format. Dedicated for converting all files in the given directory."
-    echo "$(basename $0) input ext"
-    echo "$(basename $0) video.webm mp4"
-    echo "  input  video or directory"
-    echo "  ext    ouput file extension supported by ffmpeg (e.g. mp4)"
+    echo "Usage:   $(basename $0) extension file1 [file2, file3, ...]"
+    echo "Example: $(basename $0) mp4 video1.avi video2.webm"
+    echo "         extension    ouput file extension supported by ffmpeg (e.g. mp4)"
     exit
 }
 
@@ -24,20 +23,19 @@ if [[ "$#" -lt 2 ]]; then
     printHelp
 fi
 
-input=$(realpath "$1")
-outputFileExtension="$2"
+outputFileExtension="$1"
 
-if [[ -d "$input" ]]; then
-    for fileName in $(ls "$input"); do
-        outputFileName="${fileName%.*}.$outputFileExtension"
+for inputFilePath in "${@: 2}"; do
+    if [[ "$inputFilePath" = *".$outputFileExtension" ]]; then
+        continue
+    fi
+
+    outputFilePath="${inputFilePath%.*}.$outputFileExtension"
+
+    if [[ -f "$outputFilePath" ]]; then
+        echo "$(basename $outputFilePath) exists, omitting $(basename $inputFilePath) conversion."
+        continue
+    fi
         
-        if [[ -f "$input/$outputFileName" ]]; then
-            echo "$outputFileName exists, omitting conversion."
-            continue
-        fi
-        
-        ffmpeg -i "$input/$fileName" "$input/$outputFileName"
-    done
-else
-    ffmpeg -i "$input" "${input%.*}.$outputFileExtension"
-fi
+    ffmpeg -i "$inputFilePath" "$outputFilePath"
+done

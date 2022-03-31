@@ -70,7 +70,7 @@ Increasing the similarity threshold and the number of frames to be checked incre
 
 ## szarkii-vid-convert
 
-Convert video into another format. Dedicated for converting all files in the given directory.
+Converts video(s) into another format. Dedicated for quick convert of multiple files.
 
 **Dependencies**: ffmpeg
 
