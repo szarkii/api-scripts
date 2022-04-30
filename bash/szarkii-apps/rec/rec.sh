@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.1.1"
+VERSION="0.1.2"
 
 WIDTH="1920"
 HEIGHT="1080"
@@ -30,7 +30,7 @@ function rec() {
     if [[ "$?" = "0" ]]; then
         libcamera-vid -o "$path" -t "$milliseconds" --width "$WIDTH" --height "$HEIGHT"
     else
-        raspivid -o "$path" -t "$milliseconds" --width "$WIDTH" --height "$HEIGHT"
+        raspivid -n -o "$path" -t "$milliseconds" --width "$WIDTH" --height "$HEIGHT"
     fi
 }
 
@@ -64,6 +64,8 @@ done
 mkdir -p $OUTPUT_DIR
 
 while [[ $(spaceLimitReached) = "false" ]]; do
+    # Check if camera works.
+    libcamera-hello || raspistill -n -o /dev/null && echo "Camera enabled." || exit
     rec
 done
 
