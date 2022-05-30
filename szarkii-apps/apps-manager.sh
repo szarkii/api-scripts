@@ -2,7 +2,7 @@
 
 VERSION="0.2.1"
 BIN_DIR="/usr/local/bin"
-REPOSITORY_URL="https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/bash/szarkii-apps"
+REPOSITORY_URL="https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/szarkii-apps"
 APPS_URL="$REPOSITORY_URL/apps"
 
 mapfile -t APPS < <( curl -s "$APPS_URL" )
