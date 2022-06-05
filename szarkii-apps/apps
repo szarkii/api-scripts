@@ -1,4 +1,4 @@
-szarkii-apps:apps-manager.sh:0.2.1
+szarkii-apps:apps-manager.sh:0.3.0
 szarkii-camstream:camstream/camstream.sh:0.5.0
 szarkii-rec:rec/rec.sh:0.1.2
 szarkii-merge-vid:merge-vid/merge-vid.sh:0.1.1

@@ -1,22 +1,25 @@
 #!/bin/bash
 
-VERSION="0.2.1"
+VERSION="0.3.0"
 BIN_DIR="/usr/local/bin"
 REPOSITORY_URL="https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/szarkii-apps"
 APPS_URL="$REPOSITORY_URL/apps"
+LIBS_URL="$REPOSITORY_URL/lib"
+
+HELP="
+$(basename $0) [-a | --apps] [-i | --install name] [-u | --update]  [-d | --delete name]
+  -a --apps     print all apps
+  -i --install  install app
+  -u --update   update all apps
+  -d --delete   delete app
+" 
 
 mapfile -t APPS < <( curl -s "$APPS_URL" )
 
-function printHelp() {
-    echo "$(basename $0) [-a | --apps] [-i | --install name] [-u | --update]  [-r | --remove name]"
-    echo "  -a --apps  print all apps"
-    echo "  -i --install  install app"
-    echo "  -u --update update all apps"
-    echo "  -r --remove app"
-    exit
-}
-
 function updateApps() {
+    updateLibraries
+
+    lib_logInfo "Updating apps:"
     for appDetails in $(getAllAppsDetails); do
         app=$(getAppNameFromAppDetails "$appDetails")
 
@@ -28,12 +31,29 @@ function updateApps() {
         latestVersion=$(getAppVersionFromAppDetails "$appDetails")
 
         if [[ $currentVersion != $latestVersion ]]; then
-            echo " * $app $currentVersion requires update to $latestVersion version."
+            lib_logWarn " * $app $currentVersion requires update to $latestVersion version."
             installApp "$app"
         else
-            echo " * $app $currentVersion has the latest version."
+            lib_logInfo " * $app $currentVersion has the latest version."
         fi
     done
+
+    lib_logSuccess "All apps checked."
+    lib_logSeparator
+}
+
+function updateLibraries() {
+    lib_logInfo "Updating the libraries."
+
+    for libraryFile in $(curl -s "$LIBS_URL/list"); do
+        library="${libraryFile%.*}"
+        lib_logInfo "Updating the $library library."
+        wget -q "$LIBS_URL/$libraryFile" -O "$SZARKII_APPS_LIB_DIR/$libraryFile" || exit
+        lib_logSuccess "The $library library updated."
+    done
+
+    lib_logSuccess "All libraries updated."
+    lib_logSeparator
 }
 
 function installApp() {
@@ -44,24 +64,24 @@ function installApp() {
     getAppScript "$appName" > "$appPath" || exit
     chmod +x "$appPath" || exit
 
-    echo "$appName $($appName -v) app installed."
+    lib_logSuccess "$appName $($appName -v) app installed."
 }
 
 function assertAppNameProvided() {
     if [[ "$1" = "" ]]; then
-        echo "You have to provide an app name."
+        lib_logError "You have to provide an app name."
         printAvailableApps
         exit
     fi
 }
 
 function printAvailableApps() {
-    echo "Available apps:"
+    lib_logInfo "Available apps:"
     
     for appDetails in $(getAllAppsDetails); do
         name=$(getAppNameFromAppDetails "$appDetails")
         version=$(getAppVersionFromAppDetails "$appDetails")
-        echo " * $name ($version)"
+        lib_logInfo " * $name ($version)"
     done
 }
 
@@ -100,28 +120,49 @@ function getAppDetails() {
     done
 }
 
-function removeApp() {
+function deleteApp() {
     appName="$1"
     assertAppNameProvided "$appName"
     if [[ -z $(which $appName) ]]; then
-        echo "$appName is not installed."
+        lib_logError "$appName is not installed."
     fi
 
     rm "$BIN_DIR/$appName" || exit
     if [[ -z $(which $appName) ]]; then
-        echo "$appName has been removed."
+        lib_logSuccess "$appName has been deleted."
     else
-        echo "Removing the application failed. Do you have enough privileges?"
+        lib_logError "Deleting the application failed. Do you have enough privileges?"
     fi
 }
 
-if [[ "$#" -eq 1 && ("$1" = "-h" || "$1" = "--help") ]]; then
-    printHelp
-    exit
-elif [[ "$1" = "-v" || "$1" = "--version" ]]; then
-    echo "$VERSION"
+if [[ -z "$SZARKII_APPS_DIR" || -z "$SZARKII_APPS_LIB_DIR" ]]; then
+    echo "Installing the necessary variables."
+
+    SZARKII_APPS_DIR="/home/$USER/szarkii-apps"
+    SZARKII_APPS_LIB_DIR="$SZARKII_APPS_DIR/.lib"
+
+    mkdir -p "$SZARKII_APPS_LIB_DIR"
+
+    echo >> ~/.bashrc
+    echo "# SZARKII_APPS necessary variables" >> ~/.bashrc
+    echo "export SZARKII_APPS_DIR=\"$SZARKII_APPS_DIR\"" >> ~/.bashrc
+    echo "export SZARKII_APPS_LIB_DIR=\"$SZARKII_APPS_LIB_DIR\"" >> ~/.bashrc
+
+    echo
+    echo "SZARKII_APPS_DIR: $SZARKII_APPS_DIR"
+    echo "SZARKII_APPS_LIB_DIR: $SZARKII_APPS_LIB_DIR"
+    echo "Variables setup. You can change them $(realpath ~/.bashrc) file."
+
+    updateLibraries
+
+    echo "Please restart your console."
     exit
 fi
+
+source "$SZARKII_APPS_LIB_DIR/arguments.sh"
+source "$SZARKII_APPS_LIB_DIR/log.sh"
+
+lib_printHelpOrVersionIfRequested "$@"
 
 if [[ "$1" = "-a" || "$1" = "--apps" ]]; then
     printAvailableApps
@@ -130,6 +171,6 @@ elif [[ "$1" = "-i" || "$1" = "--install" ]]; then
     installApp "$2"
 elif [[ "$1" = "-u" || "$1" = "--update" ]]; then
     updateApps
-elif [[ "$1" = "-r" || "$1" = "--remove" ]]; then
-    removeApp "$2"
+elif [[ "$1" = "-d" || "$1" = "--delete" ]]; then
+    deleteApp "$2"
 fi
