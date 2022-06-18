@@ -55,9 +55,9 @@ Sets metadata to music files. Downloads the file if URL provided.
 
 ## szarkii-img-diff
 
-The script checks how similar the images are and retruns the percent. The greater value means more similarity.
+The script checks how similar the images are.
 
-**Dependencies**: convert
+**Dependencies**: cv2
 
 ## szarkii-vid-diff
 
