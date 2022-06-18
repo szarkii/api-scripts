@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.0"
+VERSION="1.0.1"
 FRAMES_TO_CHECK_PERCENTAGE=50
 SIMILARITY_THRESHOLD=20
 
@@ -33,7 +33,6 @@ function checkDifference() {
     videoName="$2"
 
     referenceFrame=$(ls -tr "$framesDir" | head -n1)
-    outputFilePath="$DIFFERENT_VIDEOS_DIR/$videoName.jpg"
 
     for currentFramePath in "$framesDir"/*; do
         currentFrame=$(basename $currentFramePath)
@@ -42,6 +41,7 @@ function checkDifference() {
             continue
         fi
 
+        outputFilePath="$DIFFERENT_VIDEOS_DIR/${videoName}_$currentFrame"
         areFramesDifferent=$(szarkii-img-diff -s "$SIMILARITY_THRESHOLD" -o "$outputFilePath" "$framesDir/$referenceFrame" "$framesDir/$currentFrame")
 
         if [[ "$areFramesDifferent" = "True" ]]; then
@@ -49,6 +49,10 @@ function checkDifference() {
             break
         fi
     done
+
+    if [[ "$areFramesDifferent" = "False" ]]; then
+        lib_logInfo "The frames in '$videoName' video are the same."
+    fi
 }
 
 source "$SZARKII_APPS_LIB_DIR/arguments.sh"
