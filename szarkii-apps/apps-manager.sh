@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="0.3.0"
+VERSION="0.3.1"
 BIN_DIR="/usr/local/bin"
 REPOSITORY_URL="https://raw.githubusercontent.com/rkowalik/api-scripts/szarkii-apps/szarkii-apps"
 APPS_URL="$REPOSITORY_URL/apps"
@@ -61,8 +61,9 @@ function installApp() {
     assertAppNameProvided "$appName"
     
     appPath="$BIN_DIR/$appName"
-    getAppScript "$appName" > "$appPath" || exit
-    chmod +x "$appPath" || exit
+    getAppScript "$appName" > "/tmp/$appName"
+    sudo mv "/tmp/$appName" "$appPath" || exit
+    sudo chmod +x "$appPath" || exit
 
     lib_logSuccess "$appName $($appName -v) app installed."
 }
@@ -127,7 +128,7 @@ function deleteApp() {
         lib_logError "$appName is not installed."
     fi
 
-    rm "$BIN_DIR/$appName" || exit
+    sudo rm "$BIN_DIR/$appName" || exit
     if [[ -z $(which $appName) ]]; then
         lib_logSuccess "$appName has been deleted."
     else
