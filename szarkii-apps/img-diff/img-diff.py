@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from PIL import Image as im
 
-version="1.1.0"
+version="1.1.1"
 
 class ImageService:
     def __init__(self):
@@ -61,12 +61,29 @@ class ImagesDifference:
 
     def get_difference_coordinates(self):
         return self.coordinates
+    
+    def get_similarity_percentage(self):
+        if self.images_different is False:
+            return 0
+        
+        image_height, image_width = (self.second_image.shape)
+        image_area =  image_width * image_height
+        _, _, difference_width, difference_height = (self.get_difference_coordinates())
+        difference_area = difference_width + difference_height
+        
+        return difference_area / image_area * 100
+        
 
-help = sys.argv[0] + " [-h | --help] [-t threshold] [-o output] first_image second_image"
+help = sys.argv[0] + " [-h | --help] [-s similarity] [-p] [-o output] first_image second_image"
+help += "\nReturns an information if the images are different (True/False)"
+help += "\n   -s similarity index (number)"
+help += "\n   -p print similarity percentage instead of True/False"
+help += "\n   -o save file with a difference in different directory/name"
 
 similarity_threshold = 20
 output_path = None
 number_of_required_arguments = 2
+print_similarity_percentage = False
 
 if "-h" in sys.argv or "--help" in sys.argv:
     print(help)
@@ -77,7 +94,7 @@ if "-v" in sys.argv or "--version" in sys.argv:
     exit()
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "s:o:")
+    opts, args = getopt.getopt(sys.argv[1:], "s:o:p:")
 except getopt.GetoptError:
     print(help)
     sys.exit(2)
@@ -88,6 +105,9 @@ for opt, arg in opts:
     elif opt == "-o":
         output_path = arg
         number_of_required_arguments += 2
+    elif opt == "-p":
+        print_similarity_percentage = True
+        number_of_required_arguments += 1
 
 if len(sys.argv) <= number_of_required_arguments:
     print("Not enough arguments.")
@@ -98,14 +118,18 @@ first_image_path = sys.argv[len(sys.argv) - 2]
 second_image_path = sys.argv[len(sys.argv) - 1]
 
 image_service = ImageService();
-first_image = cv2.imread(first_image_path)
-second_image = cv2.imread(second_image_path)
+first_image = cv2.cvtColor(cv2.imread(first_image_path), cv2.COLOR_BGR2RGB)
+second_image = cv2.cvtColor(cv2.imread(second_image_path), cv2.COLOR_BGR2RGB)
 first_image_gray = image_service.convert_to_gray(first_image)
 second_image_gray = image_service.convert_to_gray(second_image)
 
 images_difference_service = ImagesDifference(first_image_gray, second_image_gray, similarity_threshold);
 images_difference_service.calculate_difference()
-print(images_difference_service.are_different())
+
+if print_similarity_percentage is True:
+    print(images_difference_service.get_similarity_percentage())
+else:
+    print(images_difference_service.are_different())
 
 if images_difference_service.are_different() is True:
     image_service.draw_contours(second_image, images_difference_service.get_difference_coordinates())
