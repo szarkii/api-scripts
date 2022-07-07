@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.1.0"
+VERSION="1.1.1"
 FRAMES_TO_CHECK_PERCENTAGE=50
 SIMILARITY_THRESHOLD=20
 
@@ -13,8 +13,8 @@ Checks that the video shows static content that does not change over the course 
 The script creates a snapshot of a frame every second. If the video has differences between a first and any other snapshots, the snapshot with the biggest difference will be moved to $DIFFERENT_VIDEOS_DIR.
 
 $(basename $0) [-s threshold] [-n frames] video [video2, video3, ...]
-    video  path to the video file
-    -s     similarity threshold ($SIMILARITY_THRESHOLD by default)
+video  path to the video file
+-s     similarity threshold ($SIMILARITY_THRESHOLD by default)
 "
 
 function generateFrames() {
@@ -30,20 +30,18 @@ function checkDifference() {
     framesDir="$1"
     videoName="$2"
 
-    referenceFrame=$(ls -tr "$framesDir" | head -n1)
+    # Choose 4th frame - the video could light up in the first few seconds
+    firstFrames=$(ls -tr "$framesDir" | head -n4)
+    referenceFrame=$(echo "$firstFrames" | tail -n1)
     biggestDifferencePercentage=0
     biggestDifferenceFilePath=0
 
-    for currentFramePath in "$framesDir"/*; do
+    for currentFramePath in $(ls "$framesDir" | grep -v "$firstFrames"); do
         currentFrame=$(basename $currentFramePath)
-
-        if [[ "$currentFrame" = "$referenceFrame" ]]; then
-            continue
-        fi
 
         outputFilePath="$DIFFERENT_VIDEOS_DIR/${videoName}_$currentFrame"
         differencePercentage=$(szarkii-img-diff -p -s "$SIMILARITY_THRESHOLD" -o "$outputFilePath" "$framesDir/$referenceFrame" "$framesDir/$currentFrame")
-        
+
         if [[ $(echo "$differencePercentage > $biggestDifferencePercentage" | bc -l) = 1 ]]; then
             if [[ -f "$biggestDifferenceFilePath" ]]; then
                 rm "$biggestDifferenceFilePath"
@@ -58,6 +56,8 @@ function checkDifference() {
 
     if [[ "$differencePercentage" = "0" ]]; then
         lib_logInfo "The frames in '$videoName' video are the same."
+    else
+        lib_logInfo "The frames in '$videoName' video are different. The difference is saved under '$outputFilePath'."
     fi
 }
 
@@ -67,13 +67,13 @@ source "$SZARKII_APPS_LIB_DIR/log.sh"
 lib_printHelpOrVersionIfRequested "$@"
 requiredArgumentsNumber=1
 
-while getopts s:n: option; do 
+while getopts s:n: option; do
     case "${option}" in
         s)
             SIMILARITY_THRESHOLD=${OPTARG}
             requiredArgumentsNumber=$((requiredArgumentsNumber += 2))
             ;;
-        n) 
+        n)
             if [[ ${OPTARG} -lt 2 ]]; then
                 lib_logError "The number of frames must be at least 2."
                 exit 1
