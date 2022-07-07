@@ -3,12 +3,11 @@
 import getopt
 import os
 import sys
-import time
 import cv2
 import numpy as np
 from PIL import Image as im
 
-version="1.1.2"
+version="1.1.3"
 
 class ImageService:
     def __init__(self):
@@ -130,7 +129,7 @@ images_difference_service = ImagesDifference(first_image_gray, second_image_gray
 images_difference_service.calculate_difference()
 
 if print_similarity_percentage is True:
-    print(images_difference_service.get_similarity_percentage())
+    print("%.10f" % images_difference_service.get_similarity_percentage())
 else:
     print(images_difference_service.are_different())
 
