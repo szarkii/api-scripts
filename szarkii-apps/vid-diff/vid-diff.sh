@@ -1,6 +1,6 @@
 #!/bin/bash
 
-VERSION="1.0.1"
+VERSION="1.1.0"
 FRAMES_TO_CHECK_PERCENTAGE=50
 SIMILARITY_THRESHOLD=20
 
@@ -10,13 +10,11 @@ FRAMES_DIR="$APP_DIR/frames"
 
 HELP="
 Checks that the video shows static content that does not change over the course of the video.
-The script creates a snapshot of a frame every second. If the video has differences between a first and any other snapshots, all snapshots will be moved to $DIFFERENT_VIDEOS_DIR directory. Otherwise to $SAME_VIDEOS_DIR.
-Increasing the similarity threshold and the percentage of frames to be checked increases the accuracy and time of script execution.
+The script creates a snapshot of a frame every second. If the video has differences between a first and any other snapshots, the snapshot with the biggest difference will be moved to $DIFFERENT_VIDEOS_DIR.
 
 $(basename $0) [-s threshold] [-n frames] video [video2, video3, ...]
     video  path to the video file
     -s     similarity threshold ($SIMILARITY_THRESHOLD by default)
-    -n     [DOES NOT WORK YET!] percentage of frames in equal intervals to compare ($FRAMES_TO_CHECK_PERCENTAGE by default)
 "
 
 function generateFrames() {
@@ -33,6 +31,8 @@ function checkDifference() {
     videoName="$2"
 
     referenceFrame=$(ls -tr "$framesDir" | head -n1)
+    biggestDifferencePercentage=0
+    biggestDifferenceFilePath=0
 
     for currentFramePath in "$framesDir"/*; do
         currentFrame=$(basename $currentFramePath)
@@ -42,15 +42,21 @@ function checkDifference() {
         fi
 
         outputFilePath="$DIFFERENT_VIDEOS_DIR/${videoName}_$currentFrame"
-        areFramesDifferent=$(szarkii-img-diff -s "$SIMILARITY_THRESHOLD" -o "$outputFilePath" "$framesDir/$referenceFrame" "$framesDir/$currentFrame")
+        differencePercentage=$(szarkii-img-diff -p -s "$SIMILARITY_THRESHOLD" -o "$outputFilePath" "$framesDir/$referenceFrame" "$framesDir/$currentFrame")
+        
+        if [[ $(echo "$differencePercentage > $biggestDifferencePercentage" | bc -l) = 1 ]]; then
+            if [[ -f "$biggestDifferenceFilePath" ]]; then
+                rm "$biggestDifferenceFilePath"
+            fi
 
-        if [[ "$areFramesDifferent" = "True" ]]; then
-            lib_logInfo "The frames in '$videoName' video are different. The difference is saved under '$outputFilePath'."
-            break
+            biggestDifferencePercentage="$differencePercentage"
+            biggestDifferenceFilePath="$outputFilePath"
+        elif [[ -f "$outputFilePath" ]]; then
+            rm "$outputFilePath"
         fi
     done
 
-    if [[ "$areFramesDifferent" = "False" ]]; then
+    if [[ "$differencePercentage" = "0" ]]; then
         lib_logInfo "The frames in '$videoName' video are the same."
     fi
 }
