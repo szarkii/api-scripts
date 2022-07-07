@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from PIL import Image as im
 
-version="1.1.1"
+version="1.1.2"
 
 class ImageService:
     def __init__(self):
@@ -93,9 +93,15 @@ if "-v" in sys.argv or "--version" in sys.argv:
     print(version)
     exit()
 
+if "-p" in sys.argv:
+    print_similarity_percentage = True
+    sys.argv.remove("-p")
+
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "s:o:p:")
+    opts, args = getopt.getopt(sys.argv[1:], "s:o:")
+    
 except getopt.GetoptError:
+    print("Error in the command.")
     print(help)
     sys.exit(2)
 for opt, arg in opts:
@@ -105,9 +111,6 @@ for opt, arg in opts:
     elif opt == "-o":
         output_path = arg
         number_of_required_arguments += 2
-    elif opt == "-p":
-        print_similarity_percentage = True
-        number_of_required_arguments += 1
 
 if len(sys.argv) <= number_of_required_arguments:
     print("Not enough arguments.")
