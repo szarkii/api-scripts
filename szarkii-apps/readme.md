@@ -22,6 +22,10 @@ szarkii-apps -u
 
 # Applications
 
+## szarkii-notifier
+
+Sends Telegram message to the configured channel via configured bot.
+
 ## szarkii-csv-jobs
 
 Helps with processing multiple files - executes commands from CSV file. Creates a CSV file and appends all files paths from the current directory. You can define bash command in the first column. You can use other columns as arguments (by its numbers).

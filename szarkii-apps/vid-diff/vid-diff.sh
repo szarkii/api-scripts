@@ -1,6 +1,10 @@
 #!/bin/bash
 
-VERSION="1.1.1"
+source $(szarkii-apps --get-variables-path)
+source $LIB_HELP
+source $LIB_LOG
+
+VERSION="1.1.2"
 FRAMES_TO_CHECK_PERCENTAGE=50
 SIMILARITY_THRESHOLD=20
 
@@ -61,9 +65,6 @@ function checkDifference() {
     fi
 }
 
-source "$SZARKII_APPS_LIB_DIR/arguments.sh"
-source "$SZARKII_APPS_LIB_DIR/log.sh"
-
 lib_printHelpOrVersionIfRequested "$@"
 requiredArgumentsNumber=1
 
@@ -84,11 +85,7 @@ while getopts s:n: option; do
     esac
 done
 
-if [[ $# -lt requiredArgumentsNumber ]]; then
-    lib_logError "Not enough arguments."
-    echo -e $HELP
-    exit 1
-fi
+[[ $# -lt requiredArgumentsNumber ]] && lib_printHelpAndExit "Not enough arguments."
 
 mkdir -p "$FRAMES_DIR"
 mkdir -p "$DIFFERENT_VIDEOS_DIR"

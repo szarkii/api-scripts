@@ -8,3 +8,13 @@ function lib_printHelpOrVersionIfRequested {
         exit
     fi
 }
+
+function lib_printHelpAndExit {
+    if [[ ! -z "$1" ]]; then
+        echo -e "$1"
+        echo
+    fi
+    
+    echo -e "$HELP"
+    exit 1
+}
