@@ -22,6 +22,19 @@ szarkii-apps -u
 
 # Applications
 
+## szarkii-detector
+
+For Raspberry Pi. Detects the movement and records video in the parts with configured duration.
+The hours within record is forced and within detection is disabled can be configured.
+
+### Dependencies
+
+**OpenCV** and **PiCamera**
+```
+pip install opencv-python
+sudo apt-get install python-picamera python3-picamera
+```
+
 ## szarkii-notifier
 
 Sends Telegram message to the configured channel via configured bot.

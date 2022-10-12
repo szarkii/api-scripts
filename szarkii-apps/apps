@@ -8,3 +8,4 @@ szarkii-vid-convert:vid-convert/vid-convert.sh:1.0.0
 szarkii-music-metadata:music-metadata/music-metadata.sh:1.2.0
 szarkii-csv-jobs:csv-jobs/csv-jobs.sh:0.1.0
 szarkii-notifier:notifier/notifier.sh:0.0.1
+szarkii-detector:detector/detector.py:0.0.1
