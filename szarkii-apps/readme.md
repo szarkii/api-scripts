@@ -35,6 +35,13 @@ pip install opencv-python
 sudo apt-get install python-picamera python3-picamera
 ```
 
+For Raspberry Pi Zero additional ones could be needed. Note that `--user` and `--default-timeout` could be important.
+
+```
+sudo apt install libatlas-base-dev
+pip install --user -U --default-timeout=100 numpy
+```
+
 ## szarkii-notifier
 
 Sends Telegram message to the configured channel via configured bot.

@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import getopt
+from mimetypes import init
 import os
 import sys
 import cv2
@@ -8,13 +9,14 @@ from picamera.array import PiRGBArray
 from picamera import PiCamera
 import numpy as np
 from PIL import Image as im
+import time
 from time import sleep
 from datetime import datetime
 import psutil
 import datetime as dt
 import signal
 
-version="0.0.1"
+version="0.1.0"
 
 # TODO Extract to a library
 class ImageService:
@@ -99,7 +101,7 @@ class Camera:
         self.raw_capture = PiRGBArray(self.camera, size=(self.buffer_width, self.buffer_height))
         signal.signal(signal.SIGINT, self.close)
         signal.signal(signal.SIGTERM, self.close)
-        sleep(1)
+        sleep(2)
 
     def take_photo(self, path):
         self.camera.capture(path)
@@ -158,7 +160,6 @@ class DateFormatService:
     
     def get_datetime_using_format(self, format):
         return datetime.now().strftime(format)
-    
 
 class PathsService:
     def __init__(self, output_directory_root, date_format_service):
@@ -179,6 +180,14 @@ class PathsService:
     def get_video_path(self):
         return self.get_path_for_current_day_directory("out", "h264")
     
+    def get_snapshots_directory(self):
+        snapshots = self.get_directory_in_current_day_directory("snapshots")
+        current_series = self.date_format_service.get_datetime_in_file_format()
+        return self.create_directory_if_not_exist(os.path.join(snapshots, current_series))
+    
+    def get_snapshot_filename(self):
+        return self.date_format_service.get_datetime_with_milliseconds_in_file_format() + ".jpg"
+    
     def get_path_for_current_day_directory(self, subdirectory, extension):
         directory = self.get_directory_in_current_day_directory(subdirectory)
         return os.path.join(directory, self.date_format_service.get_datetime_with_milliseconds_in_file_format() + "." + extension)
@@ -193,8 +202,7 @@ class PathsService:
     def create_directory_if_not_exist(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
-        return path
-        
+        return path    
 
 class TimeIntervalService:
     def is_time_within(self, start_minutes_from_midnight, end_minutes_from_midnight):
@@ -206,7 +214,6 @@ class TimeIntervalService:
     def get_minutes_from_midnight(self, formatted_hour_and_minute):
         hour_and_minute = formatted_hour_and_minute.split(":")
         return int(hour_and_minute[0]) * 60 + int(hour_and_minute[1])
-
 
 class DetectionStrategyService:
     def __init__(self, strategies):
@@ -288,6 +295,31 @@ class MovementDetectionStrategy:
         self.image_service.save_to_file(path, self.image)
         self.log.info("Difference detected and saved under " + path)
 
+class RecordService:
+    def __init__(self, paths_service, camera, take_photos_strategy):
+        self.paths_service = paths_service
+        self.camera = camera
+        
+        if take_photos_strategy:
+            self.record_function = self.take_pictures
+        else:
+            self.record_function = self.record_video
+    
+    def record(self, seconds):
+        self.record_function(seconds)
+    
+    def record_video(self, seconds):
+        path = self.paths_service.get_video_path()
+        self.camera.record(path, seconds)
+    
+    def take_pictures(self, seconds):
+        end_time = int(time.time()) + seconds
+        directory = self.paths_service.get_snapshots_directory()
+
+        while int(time.time()) < end_time:
+            path = os.path.join(directory, self.paths_service.get_snapshot_filename())
+            self.camera.take_photo(path)
+
 # Default values
 width = 1920
 height = 1088
@@ -299,6 +331,7 @@ continuous_record_time_interval = None
 pause_record_time_interval = None
 record_interval = 120
 max_space = 400
+take_photos_strategy = False
 
 help = sys.argv[0] + " - starts recording on movement or at a specific time.\n"
 help += "-w --width      video width, default: " + str(width) + "\n"
@@ -316,6 +349,7 @@ help += "                time when recording and detection is disabled (e.g. 12:
 help += "-i --interval   video duration in seconds, default: " + str(record_interval) + "\n"
 help += "-s --max-space  max memory space in MB that can left, before stopping further\n"
 help += "                recording, default: " + str(max_space) + " MB\n"
+help += "-t --photos     takes phoTos on movement instead of video - better quality\n"
 
 # TODO Extract to a library
 if len(sys.argv) == 1 and ("-h" in sys.argv or "--help" in sys.argv):
@@ -328,7 +362,7 @@ if "-v" in sys.argv or "--version" in sys.argv:
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "w:h:f:z:o:d:c:p:i:s:", ["width=", "height=", "framerate=", "zoom=", "output=", "difference=", "continuous-record=", "pause-record=", "interval=", "max-space="])
+    opts, args = getopt.getopt(sys.argv[1:], "w:h:f:z:o:d:c:p:i:s:t", ["width=", "height=", "framerate=", "zoom=", "output=", "difference=", "continuous-record=", "pause-record=", "interval=", "max-space=", "photos="])
 except getopt.GetoptError:
     print(help)
     sys.exit(2)
@@ -353,7 +387,8 @@ for opt, arg in opts:
         record_interval = int(arg)
     elif opt in ("-s", "--max-space"):
         max_space = int(arg)
-
+    elif opt in ("-t", "--photos"):
+        take_photos_strategy = True
 
 if not os.path.exists(output_directory_root):
     os.makedirs(output_directory_root)
@@ -370,6 +405,7 @@ detection_strategy_service = DetectionStrategyService((
     NonRecordStrategy(time_interval_service, pause_record_time_interval),
     MovementDetectionStrategy(difference_threshold, image_service, paths_service, log)
 ))
+record_service = RecordService(paths_service, camera, take_photos_strategy)
 
 log.info("Started with configuration:")
 log.info("width: " + str(width))
@@ -382,6 +418,7 @@ log.info("continuous time interval: " + str(continuous_record_time_interval))
 log.info("pause record time interval: " + str(pause_record_time_interval))
 log.info("record time interval: " + str(record_interval))
 log.info("max space (MB): " + str(max_space))
+log.info("on movement strategy: " + ("take photos" if take_photos_strategy else "record"))
 
 try:
     camera.init()
@@ -406,8 +443,8 @@ try:
             strategy.before_record()
             log.info("Starting record.")
             path = paths_service.get_video_path()
-            camera.record(path, record_interval)
-            log.info("Video saved under " + path)
+            record_service.record(record_interval)
+            log.info("Record ended.")
             previous_image = None
         else:
             previous_image = image
@@ -419,6 +456,6 @@ try:
         camera.clear_frame()
 except KeyboardInterrupt:
     log.error("Keyboard interrupt.")
-    camera.close()
 finally:
     camera.close()
+    exit()

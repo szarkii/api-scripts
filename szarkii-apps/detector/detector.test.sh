@@ -2,6 +2,7 @@
 
 function test() {
     echo "[TEST]: $1"
+    echo "$ $2"
     out=$(exec $2)
 
     successesNumber=0
@@ -37,10 +38,11 @@ test    "Test default values" \
         "continuous time interval: None" \
         "pause record time interval: None" \
         "record time interval: 120" \
-        "max space (MB): 400"
+        "max space (MB): 400" \
+        "on movement strategy: record"
 
 test    "Test custom values" \
-        "python3 detector.py -w 800 -h 600 -z 0.5,0.7,0.3,0.3 -o /tmp/szarkii-detector-test -d 20 -c 10:02-11:48 -p 06:01-06:02 -i 60 -s 2000" \
+        "python3 detector.py -w 800 -h 600 -z 0.5,0.7,0.3,0.3 -o /tmp/szarkii-detector-test -d 20 -c 10:02-11:48 -p 06:01-06:02 -i 60 -s 2000 -t" \
         "width: 800" \
         "height: 600" \
         "zoom: [0.5, 0.7, 0.3, 0.3]" \
@@ -49,7 +51,8 @@ test    "Test custom values" \
         "continuous time interval: 10:02-11:48" \
         "pause record time interval: 06:01-06:02" \
         "record time interval: 60" \
-        "max space (MB): 2000"
+        "max space (MB): 2000" \
+        "on movement strategy: take photos"
 
 
 minuteBefore=$(date -d "now -1 minute" +"%H:%M")
