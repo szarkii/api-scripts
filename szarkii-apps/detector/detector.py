@@ -16,7 +16,7 @@ import psutil
 import datetime as dt
 import signal
 
-version="0.1.0"
+version="0.1.1"
 
 # TODO Extract to a library
 class ImageService:
@@ -261,7 +261,7 @@ class NonRecordStrategy:
             self.resume_record_minutes_from_midnight = self.time_interval_service.get_minutes_from_midnight(resume_record_time)
     
     def should_be_applied(self):
-        return self.strategy_enabled and not self.time_interval_service.is_time_within(self.pause_record_minutes_from_midnight, self.resume_record_minutes_from_midnight)
+        return self.strategy_enabled and self.time_interval_service.is_time_within(self.pause_record_minutes_from_midnight, self.resume_record_minutes_from_midnight)
     
     def should_record(self, first_frame, second_frame):
         return False
