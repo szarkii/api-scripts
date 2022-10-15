@@ -16,7 +16,7 @@ import psutil
 import datetime as dt
 import signal
 
-version="0.1.1"
+version="0.2.0"
 
 # TODO Extract to a library
 class ImageService:
@@ -170,10 +170,7 @@ class PathsService:
         filename = self.date_format_service.get_date_in_file_format() + ".log"
         
         return os.path.join(self.get_current_day_directory(), filename)
-    
-    def get_init_photo_path(self):
-        return self.get_path_for_current_day_directory("init", "jpg")
-    
+
     def get_difference_photo_path(self):
         return self.get_path_for_current_day_directory("diff", "jpg")
     
@@ -187,6 +184,9 @@ class PathsService:
     
     def get_snapshot_filename(self):
         return self.date_format_service.get_datetime_with_milliseconds_in_file_format() + ".jpg"
+    
+    def get_healthcheck_path(self):
+        return self.get_path_for_current_day_directory("healthcheck", "jpg")
     
     def get_path_for_current_day_directory(self, subdirectory, extension):
         directory = self.get_directory_in_current_day_directory(subdirectory)
@@ -227,8 +227,9 @@ class DetectionStrategyService:
         return None
 
 class ContinuousRecordStrategy:
-    def __init__(self, time_interval_service, log, continuous_record_time_interval):
+    def __init__(self, time_interval_service, record_service, log, continuous_record_time_interval):
         self.time_interval_service = time_interval_service
+        self.record_service = record_service
         self.log = log
         
         if continuous_record_time_interval is None:
@@ -245,12 +246,16 @@ class ContinuousRecordStrategy:
     def should_record(self, first_frame, second_frame):
         return True
     
-    def before_record(self):
+    def record(self):
         log.info("Continuous recording is in effect.")
+        record_service.record()
 
 class NonRecordStrategy:
-    def __init__(self, time_interval_service, pause_record_time_interval):
+    def __init__(self, time_interval_service, log, pause_record_time_interval):
         self.time_interval_service = time_interval_service
+        self.log = log
+        self.next_log_time = int(time.time())
+        self.log_inteval = 600
         
         if pause_record_time_interval is None:
             self.strategy_enabled = False
@@ -261,16 +266,23 @@ class NonRecordStrategy:
             self.resume_record_minutes_from_midnight = self.time_interval_service.get_minutes_from_midnight(resume_record_time)
     
     def should_be_applied(self):
-        return self.strategy_enabled and self.time_interval_service.is_time_within(self.pause_record_minutes_from_midnight, self.resume_record_minutes_from_midnight)
+        should_be_applied = self.strategy_enabled and self.time_interval_service.is_time_within(self.pause_record_minutes_from_midnight, self.resume_record_minutes_from_midnight)
+        
+        if should_be_applied and self.next_log_time <= int(time.time()):
+            self.log.info("Non record strategy is in effect.")
+            self.next_log_time = int(time.time()) + self.log_inteval
+        
+        return should_be_applied
     
     def should_record(self, first_frame, second_frame):
         return False
     
-    def before_record(self):
+    def record(self):
         pass
 
 class MovementDetectionStrategy:
-    def __init__(self, difference_threshold, image_service, paths_service, log):
+    def __init__(self, record_service, image_service, paths_service, log, difference_threshold):
+        self.record_service = record_service
         self.difference_threshold = difference_threshold
         self.image_service = image_service
         self.paths_service = paths_service
@@ -289,31 +301,53 @@ class MovementDetectionStrategy:
         
         return self.images_difference.are_different()
         
-    def before_record(self):
+    def record(self):
         self.image_service.draw_contours(self.image, self.images_difference.get_difference_coordinates())
         path = self.paths_service.get_difference_photo_path()
         self.image_service.save_to_file(path, self.image)
         self.log.info("Difference detected and saved under " + path)
+        self.record_service.record()
 
-class RecordService:
-    def __init__(self, paths_service, camera, take_photos_strategy):
+class HealthcheckDetectionStrategy:
+    def __init__(self, paths_service, camera, log, healthcheck_interval):
         self.paths_service = paths_service
         self.camera = camera
+        self.log = log
+        self.healthcheck_interval = healthcheck_interval
+        self.next_check_time = int(time.time())
+    
+    def should_be_applied(self):
+        return self.next_check_time <= int(time.time())
+    
+    def should_record(self, first_image, second_image):
+        return True
+        
+    def record(self):
+        path = self.paths_service.get_healthcheck_path()
+        self.camera.take_photo(path)
+        self.log.info("Healthcheck snapshot saved under " + path)
+        self.next_check_time = int(time.time()) + self.healthcheck_interval
+
+class RecordService:
+    def __init__(self, paths_service, camera, record_interval, take_photos_strategy):
+        self.paths_service = paths_service
+        self.camera = camera
+        self.record_interval = record_interval
         
         if take_photos_strategy:
             self.record_function = self.take_pictures
         else:
             self.record_function = self.record_video
     
-    def record(self, seconds):
-        self.record_function(seconds)
+    def record(self):
+        self.record_function()
     
-    def record_video(self, seconds):
+    def record_video(self):
         path = self.paths_service.get_video_path()
-        self.camera.record(path, seconds)
+        self.camera.record(path, self.record_interval)
     
-    def take_pictures(self, seconds):
-        end_time = int(time.time()) + seconds
+    def take_pictures(self):
+        end_time = int(time.time()) + self.record_interval
         directory = self.paths_service.get_snapshots_directory()
 
         while int(time.time()) < end_time:
@@ -332,6 +366,7 @@ pause_record_time_interval = None
 record_interval = 120
 max_space = 400
 take_photos_strategy = False
+healthcheck_interval = 600
 
 help = sys.argv[0] + " - starts recording on movement or at a specific time.\n"
 help += "-w --width      video width, default: " + str(width) + "\n"
@@ -350,6 +385,8 @@ help += "-i --interval   video duration in seconds, default: " + str(record_inte
 help += "-s --max-space  max memory space in MB that can left, before stopping further\n"
 help += "                recording, default: " + str(max_space) + " MB\n"
 help += "-t --photos     takes phoTos on movement instead of video - better quality\n"
+help += "-l --healthcheck\n"
+help += "                heaLthcheck snapshot interval, default: " + str(healthcheck_interval) + " s\n"
 
 # TODO Extract to a library
 if len(sys.argv) == 1 and ("-h" in sys.argv or "--help" in sys.argv):
@@ -362,7 +399,7 @@ if "-v" in sys.argv or "--version" in sys.argv:
 
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], "w:h:f:z:o:d:c:p:i:s:t", ["width=", "height=", "framerate=", "zoom=", "output=", "difference=", "continuous-record=", "pause-record=", "interval=", "max-space=", "photos="])
+    opts, args = getopt.getopt(sys.argv[1:], "w:h:f:z:o:d:c:p:i:s:l:t", ["width=", "height=", "framerate=", "zoom=", "output=", "difference=", "continuous-record=", "pause-record=", "interval=", "max-space=", "healthcheck=", "photos="])
 except getopt.GetoptError:
     print(help)
     sys.exit(2)
@@ -389,6 +426,8 @@ for opt, arg in opts:
         max_space = int(arg)
     elif opt in ("-t", "--photos"):
         take_photos_strategy = True
+    elif opt in ("-l", "--healthcheck"):
+        healthcheck_interval = int(arg)
 
 if not os.path.exists(output_directory_root):
     os.makedirs(output_directory_root)
@@ -400,12 +439,13 @@ paths_service = PathsService(output_directory_root, date_format_service)
 log = Log(date_format_service, paths_service)
 camera = Camera(log, width, height, framerate, zoom)
 time_interval_service = TimeIntervalService()
+record_service = RecordService(paths_service, camera, record_interval, take_photos_strategy)
 detection_strategy_service = DetectionStrategyService((
-    ContinuousRecordStrategy(time_interval_service, log, continuous_record_time_interval),
-    NonRecordStrategy(time_interval_service, pause_record_time_interval),
-    MovementDetectionStrategy(difference_threshold, image_service, paths_service, log)
+    HealthcheckDetectionStrategy(paths_service, camera, log, healthcheck_interval),
+    ContinuousRecordStrategy(time_interval_service, record_service, log, continuous_record_time_interval),
+    NonRecordStrategy(time_interval_service, log, pause_record_time_interval),
+    MovementDetectionStrategy(record_service, image_service, paths_service, log, difference_threshold)
 ))
-record_service = RecordService(paths_service, camera, take_photos_strategy)
 
 log.info("Started with configuration:")
 log.info("width: " + str(width))
@@ -416,18 +456,14 @@ log.info("output directory root: " + str(output_directory_root))
 log.info("difference threshold: " + str(difference_threshold))
 log.info("continuous time interval: " + str(continuous_record_time_interval))
 log.info("pause record time interval: " + str(pause_record_time_interval))
-log.info("record time interval: " + str(record_interval))
+log.info("record time interval (s): " + str(record_interval))
 log.info("max space (MB): " + str(max_space))
 log.info("on movement strategy: " + ("take photos" if take_photos_strategy else "record"))
+log.info("healthcheck interval (s): " + str(healthcheck_interval))
 
 try:
     camera.init()
     log.info("Camera enabled.")
-
-    init_photo_path = paths_service.get_init_photo_path()
-    camera.take_photo(init_photo_path)
-    log.info("Init photo saved under " + init_photo_path)
-    
     previous_image = None
     
     for frame in camera.capture_continuous():
@@ -440,11 +476,7 @@ try:
         
         strategy = detection_strategy_service.get_strategy()
         if strategy.should_record(previous_image, frame.array):
-            strategy.before_record()
-            log.info("Starting record.")
-            path = paths_service.get_video_path()
-            record_service.record(record_interval)
-            log.info("Record ended.")
+            strategy.record()
             previous_image = None
         else:
             previous_image = image

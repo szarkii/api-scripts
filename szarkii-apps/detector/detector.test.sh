@@ -29,7 +29,7 @@ function test() {
 }
 
 test    "Test default values" \
-        "python3 detector.py" \
+        "python detector.py" \
         "width: 1920" \
         "height: 1088" \
         "zoom: [0.0, 0.0, 1.0, 1.0]" \
@@ -37,12 +37,13 @@ test    "Test default values" \
         "difference threshold: 80" \
         "continuous time interval: None" \
         "pause record time interval: None" \
-        "record time interval: 120" \
+        "record time interval (s): 120" \
         "max space (MB): 400" \
-        "on movement strategy: record"
+        "on movement strategy: record" \
+        "healthcheck interval (s): 600"
 
 test    "Test custom values" \
-        "python3 detector.py -w 800 -h 600 -z 0.5,0.7,0.3,0.3 -o /tmp/szarkii-detector-test -d 20 -c 10:02-11:48 -p 06:01-06:02 -i 60 -s 2000 -t" \
+        "python detector.py -w 800 -h 600 -z 0.5,0.7,0.3,0.3 -o /tmp/szarkii-detector-test -d 20 -c 10:02-11:48 -p 06:01-06:02 -i 2 -s 2000 -l 10 -t" \
         "width: 800" \
         "height: 600" \
         "zoom: [0.5, 0.7, 0.3, 0.3]" \
@@ -50,14 +51,26 @@ test    "Test custom values" \
         "difference threshold: 20" \
         "continuous time interval: 10:02-11:48" \
         "pause record time interval: 06:01-06:02" \
-        "record time interval: 60" \
+        "record time interval (s): 2" \
         "max space (MB): 2000" \
-        "on movement strategy: take photos"
+        "on movement strategy: take photos" \
+        "healthcheck interval (s): 10"
 
 
 minuteBefore=$(date -d "now -1 minute" +"%H:%M")
 minuteAfter=$(date -d "now 1 minute" +"%H:%M")
 
-test    "Test continuous record" \
-        "python3 detector.py -c $minuteBefore-$minuteAfter" \
+test    "Test continuous record strategy" \
+        "python detector.py -c $minuteBefore-$minuteAfter" \
         "Continuous recording is in effect."
+
+minuteBefore=$(date -d "now -1 minute" +"%H:%M")
+minuteAfter=$(date -d "now 1 minute" +"%H:%M")
+
+test    "Test no record strategy" \
+        "python detector.py -p $minuteBefore-$minuteAfter" \
+        "Non record strategy is in effect."
+
+test    "Healthcheck tests" \
+        "python detector.py" \
+        "Healthcheck snapshot saved under"
