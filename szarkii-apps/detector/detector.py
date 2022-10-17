@@ -16,7 +16,7 @@ import psutil
 import datetime as dt
 import signal
 
-version = "0.2.0"
+version = "0.2.1"
 
 # TODO Extract to a library
 
@@ -181,7 +181,7 @@ class PathsService:
     def get_log_file_path(self):
         filename = self.date_format_service.get_date_in_file_format() + ".log"
 
-        return os.path.join(self.get_current_day_directory(), filename)
+        return os.path.join(self.output_directory_root, filename)
 
     def get_difference_photo_path(self):
         return self.get_path_for_current_day_directory("diff", "jpg")
